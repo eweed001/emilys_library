@@ -1,0 +1,18 @@
+{% extends "base_generic.html" %}
+
+{% block content %}
+<h1>Emily's Library Home</h1>
+<p>Welcome to Emily's Library, a website developed by Emily with guidance by Mozilla Developer Network</p>
+<h2>Dynamic content</h2>
+<p>This library has the following record counts: </p>
+<ul>
+  <li>
+    <strong>Books:</strong> {{ num_books}}
+  </li>
+  <li><strong>Copies:</strong> {{ num_instances }} </li>
+  <li>
+    <strong>Copies Available:</strong> {{ num_instances_avail}}
+  </li>
+  <li><strong>Authors:</strong> {{ num_authors }}</li>
+</ul>
+{% endblock %}
