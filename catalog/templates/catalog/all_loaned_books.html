@@ -1,0 +1,15 @@
+{% extends "base_generic.html" %}
+
+{% block content %}
+<h1>All Borrowed Books</h1>
+{% if bookinstance_list %}
+<ul>
+  {% for bookins in bookinstance_list %}
+  <li><a href="{% url 'book-detail' bookins.book.pk %}">{{ bookins.book.title }}</a> - {{ bookins.borrower }}</li>
+  {% endfor %}
+
+</ul>
+{% else %}
+<p>No books are currently checked out.</p>
+{% endif %}
+{% endblock %}
