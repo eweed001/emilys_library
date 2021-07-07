@@ -6,7 +6,7 @@
 <p><strong>Description:</strong>{{ book.description }}</p>
 <p><strong>ISBN:</strong> {{ book.isbn }}</p>
 <p><strong>Genre:</strong>{{ book.genre.all|join:", " }}</p>
-<p><strong>Reviews:</strong>{{ book.review.all|join:"; " }}</p>
+<p><strong>Reviews:</strong>{{ book.reviews.all|join:"; " }}</p>
 
 <div style="margin-left:20px;margin-top:20px">
   <h4>
@@ -24,6 +24,14 @@
   <p class="text_muted"><strong>ID:</strong>{{ copy.id }}</p>
 
   {% endfor %}
-
+  {% if book.cover_img %}
+  <img src="{{ book.cover_img.url }}">
+  {% endif %}
 </div>
+
+<form method="post" action="{% url 'book-review-form' %}">
+  {% csrf_token %}
+  {{ form }}
+  <input type="submit" value="Submit">
+</form>
 {% endblock %}

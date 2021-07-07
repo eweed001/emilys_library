@@ -27,7 +27,7 @@
           {% if user.is_authenticated %}
           <li> User: {{ user.get_username }}</li>
           <li><a href="{% url 'my-borrowed' %}">My Borrowed</a></li>
-          {% if perms.catalog.can_mark_returned %}
+          {% if perms.catalog.can_add_edit %}
           <li><a href="{% url 'all-loaned' %}">All Loaned Books</a></li>
           {% endif %}
           <li><a href="{% url 'logout' %}?next={{request.path}}">Logout</a></li>

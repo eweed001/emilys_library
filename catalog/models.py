@@ -2,6 +2,8 @@ from django.db import models
 from django.urls import reverse
 import uuid
 from django.contrib.auth.models import User
+from django.utils import timezone
+from datetime import datetime
 
 # Genre model
 
@@ -10,29 +12,15 @@ class Genre(models.Model):
     """ Model representing a book genre."""
     name = models.CharField(max_length=200, help_text="Enter a book genre")
 
+    class Meta:
+        permissions = (("can_add", "Can add genres"),)
+
     def __str__(self):
         """String for representing the Model object"""
         return self.name
 
 
 # Review model
-
-
-class Review(models.Model):
-    """ Model representing a book review"""
-    writer = models.CharField(
-        max_length=200, help_text='Enter author of review')
-    body = models.TextField(max_length=2000, help_text='Review contents')
-    stars = models.IntegerField(
-        help_text='Enter how many stars the reviewer gave')
-    date_written = models.DateTimeField(null=True, blank=True)
-
-    class Meta:
-        ordering = ['date_written']
-
-    def __str__(self):
-        """String representing the model object"""
-        return self.body
 
 
 # Book Model
@@ -47,6 +35,9 @@ class Book(models.Model):
     description = models.TextField(
         max_length=1000, help_text='Enter a brief summary', blank=True)
 
+    cover_img = models.ImageField(
+        upload_to='book_covers/', null=True, blank=True)
+
     # foreign key used because a book can only have one author, but authors can have written multiple books
     author = models.ForeignKey('Author', on_delete=models.SET_NULL, null=True)
 
@@ -54,8 +45,12 @@ class Book(models.Model):
     genre = models.ManyToManyField(
         Genre, help_text='Select a genre for this book')
 
-    review = models.ManyToManyField(
-        Review, help_text="Enter review information", blank=True)
+    # review = models.ManyToManyField(
+    #     Review, help_text="Enter review information", blank=True)
+
+    class Meta:
+        permissions = (("can_edit", "Edit existing books"), ("can_add", "Can add new books"),
+                       ('can_delete', "Can delete books"))
 
     def __str__(self):
         """ String representation of the Model object"""
@@ -71,11 +66,33 @@ class Book(models.Model):
 
     display_genre.short_description = 'Genre'
 
-    def display_num_of_reviews(self):
-        """Create a string showing how many reviews a book has"""
-        count = self.review.all().count()
-        return count
-    display_num_of_reviews.short_description = "Number of Reviews"
+    # def display_num_of_reviews(self):
+    #     """Create a string showing how many reviews a book has"""
+    #     count = self.review.all().count()
+    #     return count
+
+    #display_num_of_reviews.short_description = "Number of Reviews"
+
+
+class Review(models.Model):
+    """ Model representing a book review"""
+    writer = models.CharField(
+        max_length=200, help_text='Enter author of review')
+    body = models.TextField(max_length=2000, help_text='Review contents')
+    stars = models.IntegerField(
+        help_text='Enter how many stars the reviewer gave')
+
+    date_written = models.DateTimeField(
+        default=datetime.now(), blank=True)
+    book = models.ForeignKey(
+        Book, on_delete=models.CASCADE, null=True, related_name="reviews")
+
+    class Meta:
+        ordering = ['date_written']
+
+    def __str__(self):
+        """String representing the model object"""
+        return self.body
 
 
 class BookInstance(models.Model):
@@ -103,7 +120,7 @@ class BookInstance(models.Model):
 
     class Meta:
         permissions = (("can_marked_returned", "Set book as returned"),
-                       )
+                       ("can_add_edit", "Can add/edit book instances"),)
 
     def __str__(self):
         """String representing the model object"""
@@ -119,6 +136,9 @@ class Author(models.Model):
 
     class Meta:
         ordering = ['last_name', 'first_name']
+        permissions = (("can_add", "Can add authors"),
+                       ("can_edit", "Can edit authors"),
+                       ("can_delete", "Can delete authors"))
 
     def get_absolute_url(self):
         """Returns the url to access a particulat author instance"""
