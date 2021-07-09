@@ -1,4 +1,4 @@
-from django.shortcuts import render
+from django.shortcuts import render, redirect
 from .models import Book, Author, BookInstance, Genre, Review
 from django.views import generic, View
 from django.contrib.auth.mixins import LoginRequiredMixin
@@ -14,7 +14,7 @@ from django.views.generic.detail import SingleObjectMixin
 
 from catalog.models import Author, Review
 from catalog.models import Book
-from .forms import ReviewForm
+from .forms import ReviewForm, RegisterForm
 
 
 def index(request):
@@ -49,27 +49,6 @@ class BookListView(generic.ListView):
     paginate_by = 10
 
 
-# class BookReviewForm(FormView):
-#     #model = Review
-
-#     review = forms.CharField()
-
-# class BookReviewFormView(SingleObjectMixin, FormView):
-#     template_name = 'catalog/book_detail.html'
-#     form_class = ReviewForm
-#     model = Book
-
-#     def post(self, request, *args, **kwargs):
-#         if not request.user.is_authenticated:
-#             return HttpResponseForbidden()
-
-#         self.object = self.get_object()
-#         return super().post(request, *args, **kwargs)
-
-#     def get_success_url(self):
-#         return reverse('book-detail', kwargs={'pk': self.object.pk})
-
-
 class BookDetailView(generic.DetailView):
     model = Book
     template_name = 'catalog/book_detail.html'
@@ -78,7 +57,7 @@ class BookDetailView(generic.DetailView):
     def get_context_data(self, **kwargs):
         context = super(BookDetailView, self).get_context_data(**kwargs)
         context['form'] = ReviewForm
-        #context['reviews'] = self.object.review_set
+        # context['reviews'] = self.object.review_set
         return context
 
 
@@ -86,30 +65,19 @@ class ReviewFormView(FormView):
     form_class = ReviewForm
     success_url = reverse_lazy('books')
     model = Review
-    #item = None
+    book_pk = None
+
+    def get_book(self):
+        return Review.objects.first().book
 
     def form_valid(self, form):
+        temp = form.cleaned_data.get("book")
+        self.book_pk = temp.pk
         item = form.save()
-        #self.pk = item.book.pk
-        #item.book_id = Book.objects.get(id=self.kwargs['pk'])
-        # return redirect('book-detail', self.kwargs['pk'])
         return super(ReviewFormView, self).form_valid(form)
 
-    # def get_success_url(self):
-    #    return reverse('book-detail', kwargs={'pk': item.book_id})
-
-
-# def form_valid(self, form):
-#     form.save()
-#     return super(ReviewFormView, self).form_valid(form)
-# class BookView(View):
-#     def get(self, request, *args, **kwargs):
-#         view = BookDetailView.as_view()
-#         return view(request, *args, **kwargs)
-
-#     def post(self, request, *args, **kwargs):
-#         view = BookReviewFormView.as_view()
-#         return view(request, *args, **kwargs)
+    def get_success_url(self):
+        return reverse('book-detail', args=[str(self.book_pk)])
 
 
 class AuthorListView(generic.ListView):
@@ -177,41 +145,13 @@ class BookDelete(DeleteView):
     success_url = reverse_lazy('books')
 
 
-# class ReviewCreate(FormView):
-#    model = Review
-#   fields = ['writer', 'body', 'stars']
-# class BookReview(SingleObjectMixin, FormView):
-#     template_name = 'catalog/book_detail.html'
-#     form_class = BookReviewForm
-#     model = Book
+def register(response):
+    if response.method == 'POST':
+        form = RegisterForm(response.POST)
+        if form.is_valid():
+            form.save()
+        return redirect("/accounts/login/")
+    else:
+        form = RegisterForm()
 
-#     def post(self, request, *args, **kwargs):
-#         if not request.user.is_authenticated():
-#             return HttpResponseForbidden
-#         self.object = self.get_object()
-#         return super(Review, self).post(request, *args, **kwargs)
-
-#     def get_success_url(self):
-#         return reverse('book-detail', kwargs={'pk': self.object.pk})
-
-
-# class BookDetail(view):
-
-#     def get(self, request):
-#         view = BookDetailView.as_view()
-#         return view(request)
-
-#     def post(self, request):
-#         view = BookReview.as_view()
-#         return view(request)
-
-# def get_review(request):
-#     if request.method == 'POST':
-#         form = BookReviewForm(request.POST)
-#         if form.is_valid():
-#             return HttpResponseRedirect('books/')
-
-#     else:
-#         form = BookReviewForm()
-
-#     return render(request, 'book_detail.html', {'form': form})
+    return render(response, 'catalog/register.html', {"form": form})

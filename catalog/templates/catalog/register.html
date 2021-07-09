@@ -1,0 +1,17 @@
+{% extends "base_generic.html" %}
+
+
+{% block content %}
+{% if user.is_authenticated %}
+<h1> Whoops! Look's like you're already logged in!</h1>
+<a href="{% url 'index' %}">Back Home</a>
+{% else %}
+<h1>Create an account</h1>
+
+<form method="POST">
+  {% csrf_token %}
+  {{ form }}
+  <input type="submit" name="Submit">
+</form>
+{% endif %}
+{% endblock %}

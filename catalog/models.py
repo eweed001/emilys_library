@@ -45,9 +45,6 @@ class Book(models.Model):
     genre = models.ManyToManyField(
         Genre, help_text='Select a genre for this book')
 
-    # review = models.ManyToManyField(
-    #     Review, help_text="Enter review information", blank=True)
-
     class Meta:
         permissions = (("can_edit", "Edit existing books"), ("can_add", "Can add new books"),
                        ('can_delete', "Can delete books"))
