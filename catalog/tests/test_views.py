@@ -4,7 +4,7 @@ from catalog.models import Author
 
 import datetime
 from django.utils import timezone
-from django.contrib.auth.models import User
+from django.contrib.auth.models import User, Permission
 
 from catalog.models import BookInstance, Book, Genre
 
@@ -140,3 +140,53 @@ class LoanedBookInstanceByUserListViewTest(TestCase):
         for bookitem in response.context['bookinstance_list']:
             self.assertEqual(response.context['user'], bookitem.borrower)
             self.assertEqual(bookitem.status, 'o')
+
+
+class AllLoanedBooksViewTest(TestCase):
+    def setUp(self):
+        # creating two users
+        test_user1 = User.objects.create_user(
+            username='test1', password='1X<ISRUkw+tuK')
+        test_user2 = User.objects.create_user(
+            username='test2', password='2HJ1vRV0Z&3iD')
+        test_user1.save()
+        test_user2.save()
+
+        # give user2 permission to view all loaned out books
+        permission = Permission.objects.get(name='Can add/edit book instances')
+        test_user2.user_permissions.add(permission)
+        test_user2.save()
+
+        # create a book
+        test_author = Author.objects.create(
+            first_name='Mickey', last_name='Mouse')
+        test_genre = Genre.objects.create(name='Children')
+        test_book = Book.objects.create(
+            title='Test Book',
+            description='test summary',
+            isbn='1234',
+            author=test_author,
+        )
+
+        genre_objects_for_book = Genre.objects.all()
+        test_book.genre.set(genre_objects_for_book)
+        test_book.save()
+
+        # create a copy loaned to user 1
+        BookInstance.objects.create(
+            book=test_book,
+            imprint='unlikely imprint',
+            borrower=test_user1,
+            status='o',
+        )
+
+        def test_redirect_if_not_loggedin(self):
+            response = self.client.get(reverse('all-loaned'))
+            self.assertEqual(response.status_code, 302)
+
+        def test_view_all_loaned_when_logged_in(self):
+            login = self.client.login(
+                username="test2", password="2HJ1vRV0Z&3iD")
+            response = self.client.get(reverse('all-loaned'))
+            self.assertEqual(response.status_code, 200)
+# class RegisterAccountViewTest(TestCase):
