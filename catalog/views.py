@@ -10,10 +10,12 @@ from django.urls import reverse
 from django.http import HttpResponseForbidden, HttpResponseRedirect
 from django.views.generic import FormView
 from django.views.generic.detail import SingleObjectMixin
+from django_filters.views import FilterView
 
 
 from catalog.models import Author, Review
 from catalog.models import Book
+# from catalog.filters import BookFilter
 from .forms import ReviewForm, RegisterForm
 
 
@@ -46,7 +48,15 @@ def index(request):
 
 class BookListView(generic.ListView):
     model = Book
-    paginate_by = 10
+    paginate_by = 12
+
+    def get_queryset(self):
+        filter_val = self.request.GET.get('filter')
+        queryset = super().get_queryset()
+        if filter_val:
+            return queryset.filter(title__icontains=filter_val)
+        else:
+            return queryset
 
 
 class BookDetailView(generic.DetailView):
@@ -57,7 +67,6 @@ class BookDetailView(generic.DetailView):
     def get_context_data(self, **kwargs):
         context = super(BookDetailView, self).get_context_data(**kwargs)
         context['form'] = ReviewForm
-        # context['reviews'] = self.object.review_set
         return context
 
 

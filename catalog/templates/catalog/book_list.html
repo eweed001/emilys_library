@@ -1,19 +1,62 @@
 {% extends "base_generic.html" %}
 
 {% block content %}
-<h1>
-  Book List
-</h1>
-{% if book_list %}
-<ul>
-  {% for book in book_list %}
-  <li>
-    <a href="{{ book.get_absolute_url }}">{{ book.title }}</a>
-  </li>
-  {% endfor %}
 
-</ul>
-{% else %}
-<p> there are no books in the library.</p>
-{% endif %}
+<h1 class="book-list-header">All Books</h1>
+<div class="list-sidebar">
+  hello
+  <form method="get" action="{% url 'books' %}">
+    <p>Filter: <input type="text" name="filter" value="{{ request.GET.filter }}" /></p>
+    <p>order_by: <input type="text" name="orderby" /></p>
+    <p><input type="submit" value="submit" /></p>
+  </form>
+</div>
+<div class="book-list">
+
+  {% if book_list %}
+  <ul class="flex-container">
+    {% for book in book_list %}
+    <li class="flex-item">
+      <div class="availability-text">
+        {% if book.at_least_one_bookinst_is_avail %}
+        Available
+        {% else %}
+        Unavailable
+        {% endif %}
+      </div>
+      {% if book.cover_img %}
+      <div class="cover-image-book-list">
+        <a href=" {{ book.get_absolute_url }}"><img src="{{ book.cover_img.url }}"></a>
+      </div>
+      {% endif %}
+      <div class="stars-list">
+        {% if book.average_review == -1 %}
+        N/A
+        {% else %}
+        {{ book.average_review }}
+        {% endif %}
+        {% load static %}
+        <img src="{% static 'img/star.png' %}">
+      </div>
+      <div class="book-title-list">
+        <a href=" {{ book.get_absolute_url }}">{{ book.title }}</a>
+      </div>
+
+      <div class="author-book-list">
+        by: <a href=" {{ book.author.get_absolute_url }}">{{ book.author }}</a>
+      </div>
+      <div class="genre-book-list">
+        {% for genre in book.genre.all %}
+        <span class="genre-bubble">{{ genre}} </span>
+        {% endfor %}
+      </div>
+    </li>
+    {% endfor %}
+
+  </ul>
+  {% else %}
+  <p> there are no books in the library.</p>
+  {% endif %}
+</div>
+
 {% endblock %}

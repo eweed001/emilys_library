@@ -1,38 +1,46 @@
 {% extends "base_generic.html" %}
 
 {% block content %}
-<h1>Title: {{ book.title }}</h1>
-<p><strong>Author:</strong><a href="{{ book.author.get_absolute_url }}">{{ book.author }}</a></p>
-<p><strong>Description:</strong>{{ book.description }}</p>
-<p><strong>ISBN:</strong> {{ book.isbn }}</p>
-<p><strong>Genre:</strong>{{ book.genre.all|join:", " }}</p>
-<p><strong>Reviews:</strong>{{ book.reviews.all|join:"; " }}</p>
+<div class="book-detail">
 
-<div style="margin-left:20px;margin-top:20px">
-  <h4>
-    Copies
-  </h4>
-  {% for copy in book.bookinstance_set.all %}
-  <hr>
-  <p
-    class="{% if copy.status == 'a' %}text-success{% elif copy.status == 'u' %}text-danger{% else %}text-warning{% endif %}">
-    {{ copy.get_status_display }}
-  </p>
-  {% if copy.status != 'a' %}
-  <p><strong>Not in</strong></p>
-  {% endif %}
-  <p class="text_muted"><strong>ID:</strong>{{ copy.id }}</p>
-
-  {% endfor %}
   {% if book.cover_img %}
-  <img src="{{ book.cover_img.url }}">
+  <img class="book-cover-detail" src="{{ book.cover_img.url }}">
   {% endif %}
-</div>
+  <div class="details">
+    <h1>{{ book.title }}</h1>
+    <p><strong>By:</strong> <a href="{{ book.author.get_absolute_url }}">{{ book.author.first_name }}
+        {{ book.author.last_name }}</a></p>
+    <p class="isbn">{{ book.isbn }}</p>
+    <p class="avg_review">
+      {% if book.average_review == -1 %}
+      <strong>No reviews yet</strong>
+      {% else %}
+      <strong>{{ book.average_review }}</strong>
 
-<form method="post" action="{% url 'book-review-form' %}">
-  {% csrf_token %}
-  {{ form }}
-  <input type="submit" value="Submit">
-</form>
+      {% load static %}
+      <img src="{% static 'img/star.png' %}">
+      {% endif %}
+    </p>
+    {% for genre in book.genre.all %}
+    <span class="genre-bubble-list">{{ genre }} </span>
+    {% endfor %}
+    <br />
+    <br />
+    <div class="copies-avail">
+      {% load static %}
+      <img src="{% static 'img/book.png' %}">
+      {{ book.num_copies_avail }} of {{ book.total_copies }} Copies Available
+    </div>
+    <hr>
+    <p><strong>Description:</strong>{{ book.description }}</p>
+    <p><strong>Reviews:</strong>{{ book.reviews.all|join:"; " }}</p>
+  </div>
+
+  <form method="post" action="{% url 'book-review-form' %}">
+    {% csrf_token %}
+    {{ form }}
+    <input type="submit" value="Submit">
+  </form>
+</div>
 
 {% endblock %}

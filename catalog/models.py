@@ -4,6 +4,8 @@ import uuid
 from django.contrib.auth.models import User
 from django.utils import timezone
 from datetime import datetime
+from datetime import date
+
 
 # Genre model
 
@@ -37,7 +39,7 @@ class Book(models.Model):
 
     cover_img = models.ImageField(
         upload_to='book_covers/', null=True, blank=True)
-
+    publication_date = models.DateField(blank=True, default=date.today)
     # foreign key used because a book can only have one author, but authors can have written multiple books
     author = models.ForeignKey('Author', on_delete=models.SET_NULL, null=True)
 
@@ -63,6 +65,35 @@ class Book(models.Model):
 
     display_genre.short_description = 'Genre'
 
+    def at_least_one_bookinst_is_avail(self):
+        book_insts = BookInstance.objects.filter(book=self)
+        for inst in book_insts:
+            if inst.status == 'a':
+                return True
+        return False
+
+    def num_copies_avail(self):
+        book_insts = BookInstance.objects.filter(book=self)
+        num_avail = 0
+        for book in book_insts:
+            if book.status == 'a':
+                num_avail += 1
+        return num_avail
+
+    def total_copies(self):
+        return BookInstance.objects.filter(book=self).count()
+
+    def average_review(self):
+        reviews = Review.objects.filter(book=self)
+        counter = 0
+        summer = 0
+        for review in reviews:
+            summer += review.stars
+            counter += 1
+        if counter == 0:
+            return -1
+        return summer/counter
+
     # def display_num_of_reviews(self):
     #     """Create a string showing how many reviews a book has"""
     #     count = self.review.all().count()
@@ -79,8 +110,8 @@ class Review(models.Model):
     stars = models.IntegerField(
         help_text='Enter how many stars the reviewer gave')
 
-    date_written = models.DateTimeField(
-        default=datetime.now(), blank=True)
+    date_written = models.DateField(
+        default=date.today, blank=True)
     book = models.ForeignKey(
         Book, on_delete=models.CASCADE, null=True, related_name="reviews")
 
@@ -90,6 +121,9 @@ class Review(models.Model):
     def __str__(self):
         """String representing the model object"""
         return self.body
+
+    # def get_date_written(self):
+    #     return date_written.date()
 
 
 class BookInstance(models.Model):
@@ -122,6 +156,9 @@ class BookInstance(models.Model):
     def __str__(self):
         """String representing the model object"""
         return f'{self.id} ({self.book.title})'
+
+    def get_status(self):
+        return self.status
 
 
 class Author(models.Model):
